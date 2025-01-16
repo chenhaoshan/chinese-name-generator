@@ -86,25 +86,58 @@ async function generateNames() {
     showLoading();
 
     try {
-        const API_URL = 'https://你的-railway-域名/generate-name';  // 将在部署后替换
-        const response = await fetch(API_URL, {
+        // 使用智谱API直接从前端调用
+        const response = await fetch('https://open.bigmodel.cn/api/paas/v4/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': 'Bearer f304732420bd4d728d5ea0dc3ce594cf.KxrSk6ZdMWpUfBk4'
             },
-            body: JSON.stringify({ name: englishName })
+            body: JSON.stringify({
+                model: "glm-4-flash",
+                messages: [
+                    {
+                        role: "user",
+                        content: `你现在是一位精通中英文的专业翻译，特别擅长为外国人起富有文化内涵的中文名字。请根据以下英文名 "${englishName}" 生成3个中文名字建议。
+
+要求：
+1. 名字发音要尽可能接近原英文名
+2. 使用常见、优雅的汉字
+3. 符合中国传统起名习惯
+4. 避免不雅或负面含义的字词
+5. 字义需积极向上
+
+请严格按照以下JSON格式输出，不要包含其他内容：
+{
+  "suggestions": [
+    {
+      "chinese": "中文名字",
+      "pinyin": "拼音（用空格分隔）",
+      "meaning": "名字的整体寓意（20字以内）",
+      "english": "英文解释（30字以内）",
+      "culture": "文化内涵解释（30字以内）",
+      "characters": [
+        {
+          "char": "单字",
+          "meaning": "该字的含义解释（10字以内）"
+        }
+      ]
+    }
+  ]
+}`
+                    }
+                ]
+            })
         });
 
         if (!response.ok) {
             throw new Error('名字生成失败，请稍后重试');
         }
 
-        const data = await response.json();
+        const result = await response.json();
+        const content = result.choices[0].message.content;
+        const data = JSON.parse(content);
         
-        if (data.error) {
-            throw new Error(data.error);
-        }
-
         // 清空之前的结果
         nameSuggestions.innerHTML = '';
         
